@@ -14,18 +14,28 @@ Examples of headings:
 ** Sub Heading
 *** Sub Sub Heading
 
-// All #tag tags are included when in a paragraph widget
+// All #tag tags are included when in a paragraph widget, but not in comments
 #tag1 #tag2 #tag3 
 
 * Properties
-// Properties are formatted as #+PROPERTY_NAME: text_property_1, property_2, 102
 
-// Title is globally indexed, and should make efforts to be uniquely named
-#+TITLE: test_piece
-// Nicknames are locally referenced
-#+NICKNAMES: nickname_uno nickname_the_second
+Properties are formatted as #+PROPERTY_NAME: text_property_1, property_2, 102
+
+Title is globally indexed, and should make efforts to be uniquely named, returns whether that is true
+#+TITLE: test_piece => true
+
+Nicknames are locally referenced, returns whether it is unique locally
+#+NICKNAMES: nickname_uno nickname_the_second => true false
+
 // Some properties might be auto generated with => signifying output from a machine. Don't edit this yourself!
 #+DATECREATED: => 2021/04/07-2054.30
+
+* Inter Node Links
+
+// Allow specific links to other nodes, link types and descriptions
+[[NODE_ID]]
+[[NODE_ID][LINK_TYPE]]
+[[NODE_ID or NICKNAME or TITLE][LINK_TYPE][LINK_DESCRIPTION]]
 
 * Functions
 
@@ -33,39 +43,35 @@ Examples of headings:
 
 #+FUNCTION {"input": "JSON Input", "next_data": "Yes, this is valid input"} => {"output": "Result or computation from a function"}
 
-
 // Multiline functions start with #+BEGIN_ and end with #+END_
-#+BEGIN_INWARDLINKS
-
-#+END_INWARDLINKS
-
-// Allow specific links to other nodes, link types and descriptions
-[[NODE_ID]]
-[[NODE_ID][LINK_TYPE]]
-[[NODE_ID or NICKNAME or TITLE][LINK_TYPE][LINK_DESCRIPTION]]
-
-
-// Backlinks are implemented as a function. These are all the nodes that refer to this node
+// Backlinks are implemented as a function. This is a list of all the nodes that refer to this node and how
 #+BEGIN_BACKLINKS 
 => 
 {
-  LINK_TYPE: ["tag4","tag5","tag6"]
+  LINK_TYPE: [NODE_ID_1, NODE_ID_2]
 }
 #+END_BACKLINKS
 
-// A method of keeping track of work. Appended at end of file while being worked on
-#+CLOCKIN {"date_created": "2021/04/07-2051:10"}
-#+CLOCKOUT {"date_created": "2021/04/07-2051:10"}
-// CLOCK takes clockin->clockout times to estimate duration. Recursion allows it to look at all locally linked nodes.
-#+CLOCK {"recursive": true, "link_types": ["session"]} => {"duration": null}
+* Clocking
 
-// #+TODO is a widget that marks this node as something to do. Incomplete tasks are analysed programmatically (with no text writing), but completed items are added as a new line
+// A method of keeping track of work. Appended at end of file while being used
+#+CLOCKIN {"date_created": "2021/04/07-2051:10"}
+
+#+CLOCKOUT {"date_created": "2021/04/07-2052:12"}
+
+// CLOCK widget takes sequential clockin->clockout times to estimate duration. Recursion allows it to look at all locally linked nodes.
+#+CLOCK {"recursive": true, "link_types": ["session"], "max_session_time":"15m"} => {"duration": "1m2s"}
+
+
+* Todo list tracking
+
+// #+TODO is a widget that marks this node as something to do. Incomplete tasks are analysed programmatically (with no file writing), but completed items are added as a new entry in the output json
 // Can have a repeat property which will periodically alert new events
 // Node session templates may be used to record progress and time on a discrete session or task
-#+BEGIN_TODO {"date_created": "2021/04/07-2051:10", "repeat":null, "node_template":NODE_ID} 
+#+BEGIN_TODO {"description": "Write up my todo list", "date_created": "2021/04/07-2051:10", "repeat":null, "node_template":NODE_ID} 
 => 
 {
-  "completed_flag": false, 
+  "completed_flag": true, 
   "sessions": [
     // A session property is created in the TODO when a TODO is completed
     {"session":NODE_ID, "date_completed":2021/04/07-2351:10}
@@ -73,13 +79,25 @@ Examples of headings:
 }
 #+END_TODO
 
-This is a list, also belonging to the sub sub heading?
+// Todo lists go through nodes and compile a list of all todo widgets
+#+BEGIN_TODOLIST {"recursive": true, "link_types": ["child"]} =>
+{
+  "todo_nodes":[[NODE_ID_1, WIDGET_NUM_1, "todo description"], [NODE_ID_1, WIDGET_NUM_2, "todo description 2"]],
+  "complete_nodes":[[NODE_ID_2, WIDGET_NUM_3, "todo description 3"]],
+  "todo_count":2,
+  "complete_count":1,
+}
+
+#+END_TODOLIST
+
+// Lists can be unordered or ordered. They can be nested with spaces. They can have check boxes
 - List item 1
 - [ ] list item 2 with a checkbox
+- [x] list item 3 with a marked checkbox
 1. List 2 item 1
 2. List 2 item 2
   - Sub list
 
 // Auto generated when saved, appended to the end of the file
-#+DATEMODIFIED: => 2021/04/07-2051.10
-#+DATEMODIFIED: => 2021/04/07-2051.30
+#+DATEMODIFIED: => 2021/04/07-2051:10
+#+DATEMODIFIED: => 2021/04/07-2051:30
