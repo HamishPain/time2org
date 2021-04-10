@@ -1,4 +1,4 @@
-#+DESCRIPTION Describes the .ND format
+#+DESCRIPTION: Describes the .ND format
 
 // Comments like this on their own line. //Partial line comments are not yet supported
 
@@ -48,7 +48,7 @@ Nicknames are locally referenced, returns whether it is unique locally
 #+BEGIN_BACKLINKS 
 => 
 {
-  LINK_TYPE: [NODE_ID_1, NODE_ID_2]
+  "LINK_TYPE": ["NODE_ID_1", "NODE_ID_2"]
 }
 #+END_BACKLINKS
 
@@ -68,24 +68,24 @@ Nicknames are locally referenced, returns whether it is unique locally
 // #+TODO is a widget that marks this node as something to do. Incomplete tasks are analysed programmatically (with no file writing), but completed items are added as a new entry in the output json
 // Can have a repeat property which will periodically alert new events
 // Node session templates may be used to record progress and time on a discrete session or task
-#+BEGIN_TODO {"description": "Write up my todo list", "date_created": "2021/04/07-2051:10", "repeat":null, "node_template":NODE_ID} 
+#+BEGIN_TODO {"description": "Write up my todo list", "date_created": "2021/04/07-2051:10", "repeat":null, "node_template":"NODE_ID"} 
 => 
 {
-  "completed_flag": true, 
+  "completed_flag": "true", 
   "sessions": [
-    // A session property is created in the TODO when a TODO is completed
-    {"session":NODE_ID, "date_completed":2021/04/07-2351:10}
+    {"session":"NODE_ID", "date_completed":"2021/04/07-2351:10"}
   ]
 }
 #+END_TODO
+// A session property is created in the TODO when a TODO is completed
 
 // Todo lists go through nodes and compile a list of all todo widgets
-#+BEGIN_TODOLIST {"recursive": true, "link_types": ["child"]} =>
+#+BEGIN_TODOLIST {"recursive": "true", "link_types": ["child"]} =>
 {
-  "todo_nodes":[[NODE_ID_1, WIDGET_NUM_1, "todo description"], [NODE_ID_1, WIDGET_NUM_2, "todo description 2"]],
-  "complete_nodes":[[NODE_ID_2, WIDGET_NUM_3, "todo description 3"]],
-  "todo_count":2,
-  "complete_count":1,
+  //"todo_nodes": [["NODE_ID_1", "WIDGET_NUM_1", "todo description"], ["NODE_ID_1", "WIDGET_NUM_2", "todo description 2"]],
+  //"complete_nodes": [["NODE_ID_2", "WIDGET_NUM_3", "todo description 3"]],
+  //"todo_count": "2",
+  //"complete_count": "1",
 }
 
 #+END_TODOLIST
