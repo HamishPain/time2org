@@ -220,10 +220,19 @@ class time2node:
     node.loadFile(filename)
     return node
 
+class time2graph:
+  def __init__(self):
+    self.nodes = []
+    self.node_links = {} # {'NODE_ID':{'Link_type_1':[], 'Link_type_1':[]}}
+    self.node_ID = {} #{'NODE_ID':node}
+  
+  def spawnNode(self):
+    node = time2node()
+    self.nodes.append(node)
 
-
-
-
+  def add(self, node: time2node):
+    self.nodes.append(node)
+    self.index(node)
 
 if __name__=="__main__":
   x = {"auto":True,"values":["Hello", "Goodbye", "So long"]}
