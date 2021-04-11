@@ -7,10 +7,6 @@ letters = set([x for x in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_
 numberics = set([x for x in "0123456789."])
 command_symbols = set([x for x in "#+/*"])
 
-class Widget:
-  def __init__(self, widget_text=""):
-    self.widget_text = widget_text
-
 def isType(text_type:str, type_list=["text", "heading", "list"]):
   return text_type in type_list
 
@@ -79,90 +75,156 @@ def findLinksInText(text: str):
 
     if not link_type in link_dict: link_dict[link_type] = []
     link_dict[link_type].append(node_ID)
+
+class Widget:
+  
+  def __init__(self, widget_text=""):
+    self.widget_text = widget_text
+    self.input_object = {}
+    self.output_object = {}
+    self.parseString()
+
+  def parseString(self, widget_text:str):
+    pass
+
+  match_text = ""
+
+  @classmethod
+  def isWidget(cls, line):
+    return re.search(cls.match_text, line)
+
+class TextWidget(Widget):
+  def __init__(self, widget_text):
+      super().__init__(widget_text=widget_text)
+      self.tag_list = []
+      self.links = []
+  def parseString(self, widget_text: str):  
+    self.tag_list = re.findall(r"#(\w+)", widget_text)
+    self.links = findLinksInText(widget_text)
+  
+
+class CommentWidget(TextWidget):
+  match_text = "^\s*\/\/"
+
+class FunctionWidget(Widget):
+  match_text = "^\s*#\+[a-zA-Z_]*"
+  def __init__(self, widget_text, input_data):
+      super().__init__(widget_text=widget_text)
+
+  def parseString(self, widget_text: str):
+      line = widget_text
+      x = re.search(self.match_text, line)
+      command = line[x.start():x.end()]
+      input_data = line[x.end():]
+      command = command[2:]
+      output_data = "{}"
+      
+      if "=>" in input_data:
+        input_data, output_data, *args = input_data.split("=>")
+      
+      input_data = input_data if input_data.strip() else "{}"
+      
+      try:
+        self.input_obj = json.loads(input_data)
+        self.output_obj = json.loads(output_data)
+        return True
+      except:        
+        return False
+
+class MultilineFunctionWidget(FunctionWidget):
+  @classmethod
+  def isWidget(cls, line):
+    return re.search("^\s*#\+(BEGIN_)[a-zA-Z_]*", line) and re.search("#\+(END_)[a-zA-Z_]*", line)
+  
+  def parseString(self, widget_text: str):
+    x = re.search("^\s*#\+(BEGIN_)[a-zA-Z_]*", widget_text)
+    y = re.search("#\+(END_)[a-zA-Z_]*", widget_text)
+    command = widget_text[x.start():x.end()]
+    self.command = command[2:]
+
+    input_data = widget_text[x.end():y.start()]
+    
+    if "=>" in input_data:
+      input_data, output_data, *args = input_data.split("=>")
+    
+    try:
+      input_obj = json.loads(input_data)
+    except:
+      self.input_obj = {}
+
+    try:
+      output_obj = json.loads(output_data)
+    except:
+      self.output_obj = {}
+
+class PropertyWidget(Widget):
+  match_text = "^\s*#\+[a-zA-Z]*:"
+  
+  def parseString(self, widget_text: str):
+    command, input_data = widget_text.split(":", maxsplit=1)
+    self.name = command
+    output_data = ""
+    if "=>" in input_data:
+      input_data, output_data = input_data.split("=>", maxsplit=1)
+    
+    try:
+      self.input_object = input_data.split()
+    except:
+      self.input_object = []
+    
+    try:
+      self.output_object = output_data.split()
+    except:
+      self.output_object = []
+
+class HeadingWidget(Widget):
+  @classmethod
+  def isWidget(cls, line):
+    return line.strip().startswith('*')
+  
+  def parseString(self, widget_text: str):
+    # We have a heading! Check indentation
+    self.indentation = len(charGroup(widget_text, ["*"]))
+
+class ListWidget(Widget):
+  @classmethod
+  def isWidget(cls, text):
+    return text.strip().startswith("-") or re.search("^[0-9]+$", text.strip())
+
   
 
 # Process a line of text. If it's a command, split it up and call the associated function
 def process(line: str) -> List[Union[str, object]]:
 
   # A comment
-  if re.search("^\s*\/\/", line):
-    return "comment",line
+  if CommentWidget.isWidget(line):
+    return CommentWidget(line)
 
   # Property
-  elif re.search("^\s*#\+[a-zA-Z]*:", line):
-    
-    command, input_data = line.split(":", maxsplit=1)
-    output_data = ""
-    if "=>" in input_data:
-      input_data, output_data = input_data.split("=>", maxsplit=1)
-    
-
-    return "property", command+" input: "+str(input_data.split())+" output: "+str(output_data.split())
+  elif PropertyWidget.isWidget(line):
+    return PropertyWidget(line)
 
   # Multiline function
-  elif re.search("^\s*#\+(BEGIN_)[a-zA-Z_]*", line) and re.search("#\+(END_)[a-zA-Z_]*", line):
-    print("multiline")
-    x = re.search("^\s*#\+(BEGIN_)[a-zA-Z_]*", line)
-    y = re.search("#\+(END_)[a-zA-Z_]*", line)
-    command = line[x.start():x.end()]
-    input_data = line[x.end():y.start()]
-    command = command[2:]
-    output_data = "{}"
-    
-    if "=>" in input_data:
-      input_data, output_data, *args = input_data.split("=>")
-    
-    if not '{' in input_data:
-      input_data = "{}"
-    
-    try:
-      input_obj = json.loads(input_data)
-    except:
-      print("Input issue")
-      print(input_data)
-    try:
-      output_obj = json.loads(output_data)
-    except:
-      print("output issue")
-      print(output_data)
-    
-    return "function",line
+  elif MultilineFunctionWidget.isWidget(line):
+    return MultilineFunctionWidget(line)
 
   # Function
-  elif re.search("^\s*#\+[a-zA-Z_]*", line):
-    x = re.search("^\s*#\+[a-zA-Z_]*", line)
-    command = line[x.start():x.end()]
-    input_data = line[x.end():]
-    command = command[2:]
-    output_data = "{}"
-    
-    if "=>" in input_data:
-      input_data, output_data, *args = input_data.split("=>")
-    
-    input_data = input_data if input_data.strip() else "{}"
-    
-    input_obj = json.loads(input_data)
-    output_obj = json.loads(output_data)
-    
-    return "function",command+" input: "+str(input_obj)+" output: "+str(output_obj)
+  elif FunctionWidget.isWidget(line):
+    return FunctionWidget(line)
 
   # Headings
-  elif line.strip().startswith('*'):
-    # We have a heading! Check indentation
-    indentation = len(charGroup(line, ["*"]))
-    return "heading",line
+  elif HeadingWidget.isWidget(line):
+    return HeadingWidget(line)
   
   # A list
-  elif line.strip().startswith("-") or re.search("^[0-9]+$", line.strip()):
-    return "list",line
+  elif ListWidget.isWidget(line):
+    return ListWidget(line)
 
-  # Some text! Maybe including links or #tags
+  # Some text! (or unrecognised garbage) Maybe including links or #tags
   else:
-    tag_list = re.findall(r"#(\w+)", line)
-    links = findLinksInText(line)
-    return "text",line
+    return TextWidget(line)
 
-  return "unknown",line
+  return Widget(line)
 
 
 def appendData(command: str, data_obj: object=None, multi_line: bool = False):
@@ -179,6 +241,28 @@ class time2node:
     self.widgets = [] #Ordered list of widget objects
     self.save_string = ""
     self.filename = ""
+    self.title = ""
+    self.nicknames = []
+    self.text = ""
+  
+  def update(self):
+    self.text = [widget for widget in self.widgets if widget is TextWidget]
+    self.properties = [widget for widget in self.widgets if widget is PropertyWidget]
+    self.functions = [widget for widget in self.widgets if widget is FunctionWidget]
+
+    property_widget: PropertyWidget
+    for property_widget in self.properties:
+      if property_widget.name == 'NICKNAME':
+        self.nicknames += property_widget.input_object
+      elif property_widget.name == 'TITLE':
+        try:
+          self.title = property_widget.input_object[0]
+        except:
+          pass
+    
+    for function in self.functions:
+      pass
+    
   
   def loadFile(self, filename):
     self.filename = filename
@@ -203,12 +287,20 @@ class time2node:
 
       line_index += 1
 
-      line_type, data = process(current_line)
-      if data:
+      try:
+        line_type, name, line, input_data, output_data = process(current_line)
+      except:
+        line_type, line = process(current_line)
+
+      if line:
         if len(self.widgets) and self.widgets[-1][0] == "text" and line_type == "text":
-          self.widgets[-1][1] += data
+          self.widgets[-1][1] += line
         else:
-          self.widgets.append([line_type, data])
+          try:
+            self.widgets.append([line_type, [name, input_data, output_data]])
+            del input_data, output_data
+          except:
+            self.widgets.append([line_type, line])
 
   #TODO implement save file
   def saveFile(self):
