@@ -7,6 +7,10 @@ letters = set([x for x in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_
 numberics = set([x for x in "0123456789."])
 command_symbols = set([x for x in "#+/*"])
 
+class Widget:
+  def __init__(self, widget_text=""):
+    self.widget_text = widget_text
+
 def isType(text_type:str, type_list=["text", "heading", "list"]):
   return text_type in type_list
 
@@ -126,7 +130,6 @@ def process(line: str) -> List[Union[str, object]]:
 
   # Function
   elif re.search("^\s*#\+[a-zA-Z_]*", line):
-    print('singleline')
     x = re.search("^\s*#\+[a-zA-Z_]*", line)
     command = line[x.start():x.end()]
     input_data = line[x.end():]
@@ -169,6 +172,58 @@ def appendData(command: str, data_obj: object=None, multi_line: bool = False):
   append_str += "\n#+END_{}".format(command) if multi_line else ""
 
   return append_str
+
+
+class time2node:
+  def __init__(self):
+    self.widgets = [] #Ordered list of widget objects
+    self.save_string = ""
+    self.filename = ""
+  
+  def loadFile(self, filename):
+    self.filename = filename
+
+    # read a .org text file, split into lines
+    with open(self.filename, 'r') as f:
+      lines = f.readlines()
+
+    # go over every line and parse into a data structure
+    # no nesting is allowed
+    line_index = 0
+
+    while line_index < len(lines):
+      current_line = lines[line_index]
+      
+      # Process a multi-line object
+      if re.search('#\+BEGIN_', current_line):
+        while not re.search('#\+END_', current_line) or line_index > len(lines):
+          if not checkLineForComment(current_line):
+            current_line+=lines[line_index]
+          line_index += 1
+
+      line_index += 1
+
+      line_type, data = process(current_line)
+      if data:
+        if len(self.widgets) and self.widgets[-1][0] == "text" and line_type == "text":
+          self.widgets[-1][1] += data
+        else:
+          self.widgets.append([line_type, data])
+
+  #TODO implement save file
+  def saveFile(self):
+    pass
+
+  @classmethod
+  def fromFile(cls, filename):
+    node = time2node()
+    node.loadFile(filename)
+    return node
+
+
+
+
+
 
 if __name__=="__main__":
   x = {"auto":True,"values":["Hello", "Goodbye", "So long"]}
