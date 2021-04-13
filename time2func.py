@@ -1,7 +1,8 @@
 # Uses regex for various string matching
+from os import link
 import re
 import json
-from typing import List, Set, Union
+from typing import List, Set, Text, Union
 
 letters = set([x for x in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"])
 numberics = set([x for x in "0123456789."])
@@ -75,6 +76,7 @@ def findLinksInText(text: str):
 
     if not link_type in link_dict: link_dict[link_type] = []
     link_dict[link_type].append(node_ID)
+  return link_dict
 
 class Widget:
   
@@ -82,7 +84,7 @@ class Widget:
     self.widget_text = widget_text
     self.input_object = {}
     self.output_object = {}
-    self.parseString()
+    self.parseString(widget_text)
 
   def parseString(self, widget_text:str):
     pass
@@ -92,23 +94,31 @@ class Widget:
   @classmethod
   def isWidget(cls, line):
     return re.search(cls.match_text, line)
+  
+  def __repr__(self):
+    return self.__class__.__name__ + " " + self.widget_text
 
 class TextWidget(Widget):
   def __init__(self, widget_text):
-      super().__init__(widget_text=widget_text)
       self.tag_list = []
       self.links = []
+      super().__init__(widget_text=widget_text)
+      
   def parseString(self, widget_text: str):  
-    self.tag_list = re.findall(r"#(\w+)", widget_text)
-    self.links = findLinksInText(widget_text)
+    self.tag_list += re.findall(r"#(\w+)", widget_text)
+    self.links += findLinksInText(widget_text)
   
+  def concat(self, widget: Widget):
+    self.widget_text += widget.widget_text
+    self.parseString(widget.widget_text)
+
 
 class CommentWidget(TextWidget):
   match_text = "^\s*\/\/"
 
 class FunctionWidget(Widget):
   match_text = "^\s*#\+[a-zA-Z_]*"
-  def __init__(self, widget_text, input_data):
+  def __init__(self, widget_text):
       super().__init__(widget_text=widget_text)
 
   def parseString(self, widget_text: str):
@@ -130,6 +140,13 @@ class FunctionWidget(Widget):
         return True
       except:        
         return False
+  
+  def update(self):
+    pass
+
+class ClockInWidget(FunctionWidget):
+  def __init__(self, widget_text):
+      super().__init__(widget_text)
 
 class MultilineFunctionWidget(FunctionWidget):
   @classmethod
@@ -191,10 +208,10 @@ class ListWidget(Widget):
   def isWidget(cls, text):
     return text.strip().startswith("-") or re.search("^[0-9]+$", text.strip())
 
-  
+
 
 # Process a line of text. If it's a command, split it up and call the associated function
-def process(line: str) -> List[Union[str, object]]:
+def process(line: str) -> Widget:
 
   # A comment
   if CommentWidget.isWidget(line):
@@ -287,20 +304,13 @@ class time2node:
 
       line_index += 1
 
-      try:
-        line_type, name, line, input_data, output_data = process(current_line)
-      except:
-        line_type, line = process(current_line)
+      widget = process(current_line)
 
-      if line:
-        if len(self.widgets) and self.widgets[-1][0] == "text" and line_type == "text":
-          self.widgets[-1][1] += line
+      if widget:
+        if widget is TextWidget and self.widgets and self.widgets[-1] is TextWidget:
+          self.widgets[-1].concat(widget)
         else:
-          try:
-            self.widgets.append([line_type, [name, input_data, output_data]])
-            del input_data, output_data
-          except:
-            self.widgets.append([line_type, line])
+          self.widgets.append(widget)
 
   #TODO implement save file
   def saveFile(self):

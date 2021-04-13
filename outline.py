@@ -12,6 +12,6 @@ node = t2.time2node.fromFile("test.nd")
 node.update()
 #%%
 for i in node.widgets:
-  print(i)
+  print(i.__repr__(), end='')
 
 # %%
