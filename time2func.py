@@ -94,7 +94,7 @@ class time2node:
       widget = processWidget(current_line)
 
       if widget:
-        if widget is TextWidget and self.widgets and self.widgets[-1] is TextWidget:
+        if isinstance(widget,TextWidget) and self.widgets and isinstance(self.widgets[-1], TextWidget):
           self.widgets[-1].concat(widget)
         else:
           self.widgets.append(widget)

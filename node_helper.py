@@ -19,24 +19,24 @@ def charGroup(text: str, allowed_chars: List[str] or Set[str]) -> str:
       break
   return new_line
 
-def processInput(text: str):
-  if "{" in text:
-    try:
-      return json.loads(text)
-    except:
-      return None
-  else:
-    # Split into array of tags and dict of things
-    property_list = []
-    property_dict = {}
-    text = text.split()
-    for token in text:
-      if ':' in token:
-        prop, value, *args = token.split()
-        property_dict[prop] = value
-      else:
-        property_list.append(token)
-    return [property_list, property_dict]
+# def processInput(text: str):
+#   if "{" in text:
+#     try:
+#       return json.loads(text)
+#     except:
+#       return None
+#   else:
+#     # Split into array of tags and dict of things
+#     property_list = []
+#     property_dict = {}
+#     text = text.split()
+#     for token in text:
+#       if ':' in token:
+#         prop, value, *args = token.split()
+#         property_dict[prop] = value
+#       else:
+#         property_list.append(token)
+#     return [property_list, property_dict]
 
 def checkLineForComment(text: str):
   return re.search("^\s*\/\/", text) != None
