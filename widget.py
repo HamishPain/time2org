@@ -42,12 +42,12 @@ class Widget:
 class TextWidget(Widget):
   def __init__(self, widget_text):
       self.tag_list = []
-      self.links = []
+      self.links: Dict[str,List[str]] = {}
       super().__init__(widget_text=widget_text)
       
   def parseString(self, widget_text: str):  
-    self.tag_list += re.findall(r"#(\w+)", widget_text)
-    self.links += findLinksInText(widget_text)
+    self.tag_list = re.findall(r"#(\w+)", widget_text)
+    self.links = findLinksInText(widget_text)
   
   def concat(self, widget: Widget):
     self.widget_text += widget.widget_text
@@ -150,7 +150,6 @@ class PropertyWidget(Widget):
   def __str__(self):
     return "#+{}: {}{}{}\n".format(self.name, ' '.join(self.input_object) if self.input_object else ""," => " if self.output_object else "", ' '.join(self.output_object) if self.output_object else "")
 
-
 class DateModifiedPropertyWidget(PropertyWidget):
   def parseString(self, widget_text: str):
       super().parseString(widget_text)
@@ -173,3 +172,35 @@ class ListWidget(Widget):
   def isWidget(cls, text):
     return text.strip().startswith("-") or re.search("^[0-9]+$", text.strip())
 
+# Process a line of text. If it's a command, split it up and call the associated function
+def processWidget(line: str) -> Widget:
+
+  # A comment
+  if CommentWidget.isWidget(line):
+    return CommentWidget(line)
+
+  # Property
+  elif PropertyWidget.isWidget(line):
+    return PropertyWidget(line)
+
+  # Multiline function
+  elif MultilineFunctionWidget.isWidget(line):
+    return MultilineFunctionWidget(line)
+
+  # Function
+  elif FunctionWidget.isWidget(line):
+    return FunctionWidget(line)
+
+  # Headings
+  elif HeadingWidget.isWidget(line):
+    return HeadingWidget(line)
+  
+  # A list
+  elif ListWidget.isWidget(line):
+    return ListWidget(line)
+
+  # Some text! (or unrecognised garbage) Maybe including links or #tags
+  else:
+    return TextWidget(line)
+
+  return Widget(line)

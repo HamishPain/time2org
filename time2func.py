@@ -7,49 +7,7 @@ import datetime
 import random
 from widget import *
 from node_helper import *
-
-
-# Process a line of text. If it's a command, split it up and call the associated function
-def process(line: str) -> Widget:
-
-  # A comment
-  if CommentWidget.isWidget(line):
-    return CommentWidget(line)
-
-  # Property
-  elif PropertyWidget.isWidget(line):
-    return PropertyWidget(line)
-
-  # Multiline function
-  elif MultilineFunctionWidget.isWidget(line):
-    return MultilineFunctionWidget(line)
-
-  # Function
-  elif FunctionWidget.isWidget(line):
-    return FunctionWidget(line)
-
-  # Headings
-  elif HeadingWidget.isWidget(line):
-    return HeadingWidget(line)
-  
-  # A list
-  elif ListWidget.isWidget(line):
-    return ListWidget(line)
-
-  # Some text! (or unrecognised garbage) Maybe including links or #tags
-  else:
-    return TextWidget(line)
-
-  return Widget(line)
-
-
-def appendData(command: str, data_obj: object=None, multi_line: bool = False):
-  append_str = "#+BEGIN_" +command + ("\n" if multi_line else " ") + "=>\n"
-  if data_obj:
-    append_str += json.dumps(data_obj, indent=2 if multi_line else None)
-  append_str += "\n#+END_{}".format(command) if multi_line else ""
-
-  return append_str
+from pprint import pprint
 
 
 class time2node:
@@ -58,14 +16,34 @@ class time2node:
     self.save_string = ""
     self.filename = ""
     self.title = ""
-    self.nicknames = []
-    self.text = ""
+    self.nicknames: List[str] = []
+    self.text: List[TextWidget] = []
+    self.properties: List[PropertyWidget] = []
+    self.functions: List[FunctionWidget] = []
     self.node_ID = ""
+    self.date_created = ""
+    self.description = ""
+    self.dates_modified: str = []
+    self.tags = []
+    self.links: Dict[str,List[str]] = {}
+    self.backlinks: Dict[str,List[str]] = {}
   
   def update(self):
-    self.text = [widget for widget in self.widgets if widget is TextWidget]
-    self.properties = [widget for widget in self.widgets if widget is PropertyWidget]
-    self.functions = [widget for widget in self.widgets if widget is FunctionWidget]
+    self.text: List[TextWidget] = [widget for widget in self.widgets if isinstance(widget, TextWidget)]
+    self.properties: List[PropertyWidget] = [widget for widget in self.widgets if isinstance(widget,PropertyWidget)]
+    self.functions: List[FunctionWidget] = [widget for widget in self.widgets if isinstance(widget, FunctionWidget)]
+    
+    self.tags: List[str] = []
+    for text_widget in self.text:
+      for tag in text_widget.tag_list:
+        if tag not in self.tags:
+          self.tags += tag
+      for link_type, node_ref_list in text_widget.links.items():
+        if not link_type in self.links:
+          self.links[link_type] = []
+        for node_ref in node_ref_list:
+          if node_ref not in self.links[link_type]:
+            self.links[link_type] += node_ref
 
     property_widget: PropertyWidget
     for property_widget in self.properties:
@@ -76,9 +54,18 @@ class time2node:
           self.title = property_widget.input_object[0]
         except:
           pass
+      elif property_widget.name == 'DESCRIPTION':
+        self.description = ' '.join(property_widget.input_object)
+      elif property_widget.name == "DATECREATED":
+        self.date_created = ''.join(property_widget.input_object)
+      elif property_widget.name == "DATEMODIFIED":
+        self.dates_modified += property_widget.output_object
     
     for function in self.functions:
-      pass
+      function.updateInternal()
+
+    for function in self.functions:
+      function.updateExternal(self)
     
   
   def loadFile(self, filename):
@@ -104,7 +91,7 @@ class time2node:
           line_index += 1
 
 
-      widget = process(current_line)
+      widget = processWidget(current_line)
 
       if widget:
         if widget is TextWidget and self.widgets and self.widgets[-1] is TextWidget:
@@ -112,7 +99,6 @@ class time2node:
         else:
           self.widgets.append(widget)
 
-  #TODO implement save file
   def saveFile(self):
     if not self.filename:
       random.seed(datetime.datetime.now().timestamp())

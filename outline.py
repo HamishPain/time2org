@@ -1,5 +1,6 @@
 #%%
 # Uses regex for various string matching
+from node_helper import findBracketedText, findLinksInText
 from typing import List, Set
 import time2func as t2
 import re
@@ -35,3 +36,6 @@ node.addWidget(t2.DateModifiedPropertyWidget())
 node.saveFile()
 
 # %%
+
+t = "[[NODE_ID]]\n[[Welcome][parent]] [[Test2][seven][A place that we all know and love]]"
+print(findLinksInText(t))

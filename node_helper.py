@@ -1,5 +1,5 @@
 import json
-from typing import List, Set
+from typing import Dict, List, Set
 import regex as re
 
 letters = set([x for x in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"])
@@ -54,7 +54,7 @@ def findBracketedText(text: str):
             yield selected_text
             base_count += 1
 
-def findLinksInText(text: str):
+def findLinksInText(text: str) -> Dict[str,List[str]]:
   bracket_list = list(findBracketedText(text))
   link_dict = {}
   for text in bracket_list:
@@ -76,3 +76,11 @@ def findLinksInText(text: str):
     link_dict[link_type].append(node_ID)
   return link_dict
 
+
+def appendData(command: str, data_obj: object=None, multi_line: bool = False):
+  append_str = "#+BEGIN_" +command + ("\n" if multi_line else " ") + "=>\n"
+  if data_obj:
+    append_str += json.dumps(data_obj, indent=2 if multi_line else None)
+  append_str += "\n#+END_{}".format(command) if multi_line else ""
+
+  return append_str
