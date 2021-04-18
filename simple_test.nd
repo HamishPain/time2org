@@ -17,7 +17,8 @@ Text
 #+CLOCKIN {"date_created": "2021/04/07-2051:10"}
 #+CLOCKOUT {"date_created": "2021/04/07-2052:12"}
 #+CLOCK {"recursive": true, "link_types": ["session"], "max_session_time":"15m"} => {"duration": "1m2s"}
-#+BEGIN_TODO {"description": "Write up my todo list", "date_created": "2021/04/07-2051:10", "repeat":null, "node_template":"NODE_ID"} 
+#+BEGIN_TODO 
+{"description": "Write up my todo list", "date_created": "2021/04/07-2051:10", "repeat":null, "node_template":"NODE_ID"} 
 => 
 {
   "completed_flag": "true", 
