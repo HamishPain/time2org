@@ -101,8 +101,8 @@ class time2node:
 
   def saveFile(self):
     if not self.filename:
-      random.seed(datetime.datetime.now().timestamp())
-      self.node_ID = self.title+str(random.randint(0,10000000))
+      self.node_ID = self.title+"_"+generateNodeID()
+      self.filename = self.node_ID+".nd"
     with open(self.filename, 'w') as f:
       widget: Widget
       for widget in self.widgets:
@@ -112,6 +112,7 @@ class time2node:
   def fromFile(cls, filename):
     node = time2node()
     node.loadFile(filename)
+    node.update()
     return node
   
   def addWidget(self, widget):
@@ -124,7 +125,6 @@ class time2node:
       self.widgets[index-1:index-1] = [widget]
       del self.widgets[index+1]
 
-  
   def transposeWidgetDown(self, widget: Widget):
     index = self.widgets.index(widget)
     if index != -1 and index < len(self.widgets):
@@ -140,14 +140,32 @@ class time2graph:
   def spawnNode(self):
     node = time2node()
     self.nodes.append(node)
+    return node
 
   def add(self, node: time2node):
-    self.nodes.append(node)
-    self.index(node)
+    if not node in self.nodes:
+      self.nodes.append(node)
+    # self.nodes.index(node)
+  
+  def update(self):
+    for node in self.nodes:
+      node.update()
   
   def save(self):
     for node in self.nodes:
       node.saveFile()
+  
+  def load(self):
+    import os
+    for filename in os.listdir(os.getcwd()):
+      if '.nd' in filename:
+        self.nodes.append(time2node.fromFile(filename))
+  
+  def findNodes(self, nicknames:List[str]=[], tags:List[str]=[], ):
+    found_nicknames = [x for x in self.nodes if set(nicknames).issubset(set(x.nicknames))]
+    found_tags = [x for x in self.nodes if set(tags).issubset(set(x.tags))]
+
+    return [x for x in self.nodes if x in found_nicknames and x in found_tags]
 
 if __name__=="__main__":
   x = {"auto":True,"values":["Hello", "Goodbye", "So long"]}

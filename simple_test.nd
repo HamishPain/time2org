@@ -4,7 +4,7 @@ Text
 * A Heading
 #tag1 #tag2 #tag3 
 #+TITLE: test_piece => true
-#+NICKNAMES: nickname_uno nickname_the_second => true false
+#+NICKNAMES: simple_node simple => true false
 #+DATECREATED:  => 2021/04/07-2054.30
 [[NODE_ID]]
 [[Welcome][parent]] [[Test2][seven][A place that we all know and love]]

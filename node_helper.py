@@ -1,10 +1,16 @@
 import json
 from typing import Dict, List, Set
 import regex as re
+import random
+import datetime
 
-letters = set([x for x in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"])
-numberics = set([x for x in "0123456789."])
-command_symbols = set([x for x in "#+/*"])
+letters = [x for x in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"]
+numberics = [x for x in "0123456789."]
+command_symbols = [x for x in "#+/*"]
+
+def generateNodeID():
+  random.seed(datetime.datetime.now().timestamp())
+  return ''.join([random.choice(letters[:-1]+numberics[:-1]) for x in range(20)])
 
 def isType(text_type:str, type_list=["text", "heading", "list"]):
   return text_type in type_list
