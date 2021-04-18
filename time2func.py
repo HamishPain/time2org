@@ -182,15 +182,17 @@ class MultilineFunctionWidget(FunctionWidget):
     try:
       self.input_obj = json.loads(input_data)
     except:
+      print("Could not load input object")
       self.input_obj = {}
 
     try:
       self.output_obj = json.loads(output_data)
     except:
+      print("Could not load output object")
       self.output_obj = {}
   
   def __str__(self):
-    return "#+BEGIN_{}\n{}\n{}\n{}\n#+END_{}\n".format(self.command, json.dumps(self.input_obj, indent=2), "=>", json.dumps(self.output_obj, indent=2), self.command)
+    return "#+BEGIN_{}\n{}\n{}\n{}\n#+END_{}\n".format(self.command, json.dumps(self.input_obj, indent=2), " => ", json.dumps(self.output_obj, indent=2), self.command)
 
 class PropertyWidget(Widget):
   match_text = "^\s*#\+[a-zA-Z]*:"
@@ -220,7 +222,7 @@ class PropertyWidget(Widget):
     self.widget_text = self.__repr__()
   
   def __str__(self):
-    return "#+"+self.name+": "+str(self.input_object)+"=>"+str(self.output_object)+"\n"
+    return "#+{}: {}{}{}\n".format(self.name, ' '.join(self.input_object) if self.input_object else ""," => " if self.output_object else "", ' '.join(self.output_object) if self.output_object else "")
 
 class DateModifiedPropertyWidget(PropertyWidget):
   def parseString(self, widget_text: str):
@@ -331,17 +333,18 @@ class time2node:
 
     while line_index < len(lines):
       current_line = lines[line_index]
+      line_index += 1
       
       # Process a multi-line object
       if re.search('#\+BEGIN_', current_line):
-        while not re.search('#\+END_', current_line) or line_index > len(lines):
+        while not re.search('#\+END_', current_line) and line_index < len(lines):
           if not checkLineForComment(current_line):
             current_line+=lines[line_index]
           line_index += 1
 
-      line_index += 1
 
       widget = process(current_line)
+      print("LINE: ", current_line)
 
       if widget:
         if widget is TextWidget and self.widgets and self.widgets[-1] is TextWidget:

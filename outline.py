@@ -25,12 +25,13 @@ node.update()
 # for i in node.widgets:
 #   print(i.__repr__(), end='')
 
-# node.addWidget(t2.DateModifiedPropertyWidget())
+
 
 
 # for i in node.widgets:
 #   print(i.__repr__(), end='')
 
+node.addWidget(t2.DateModifiedPropertyWidget())
 node.saveFile()
 
 # %%
