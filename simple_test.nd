@@ -33,6 +33,7 @@ Text
   //"todo_count": "2",
   //"complete_count": "1",
 }
+#+END_TODOLIST
 - List item 1
 - [ ] list item 2 with a checkbox
 - [x] list item 3 with a marked checkbox

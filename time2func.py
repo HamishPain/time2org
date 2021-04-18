@@ -172,7 +172,7 @@ class MultilineFunctionWidget(FunctionWidget):
     x = re.search("^\s*#\+(BEGIN_)[a-zA-Z_]*", widget_text)
     y = re.search("#\+(END_)[a-zA-Z_]*", widget_text)
     command = widget_text[x.start():x.end()]
-    self.command = command[2:]
+    self.command = command[8:]
 
     input_data = widget_text[x.end():y.start()]
     
@@ -180,14 +180,17 @@ class MultilineFunctionWidget(FunctionWidget):
       input_data, output_data, *args = input_data.split("=>")
     
     try:
-      input_obj = json.loads(input_data)
+      self.input_obj = json.loads(input_data)
     except:
       self.input_obj = {}
 
     try:
-      output_obj = json.loads(output_data)
+      self.output_obj = json.loads(output_data)
     except:
       self.output_obj = {}
+  
+  def __str__(self):
+    return "#+BEGIN_{}\n{}\n{}\n{}\n#+END_{}\n".format(self.command, json.dumps(self.input_obj, indent=2), "=>", json.dumps(self.output_obj, indent=2), self.command)
 
 class PropertyWidget(Widget):
   match_text = "^\s*#\+[a-zA-Z]*:"
@@ -216,7 +219,7 @@ class PropertyWidget(Widget):
     
     self.widget_text = self.__repr__()
   
-  def __repr__(self):
+  def __str__(self):
     return "#+"+self.name+": "+str(self.input_object)+"=>"+str(self.output_object)+"\n"
 
 class DateModifiedPropertyWidget(PropertyWidget):
@@ -356,8 +359,6 @@ class time2node:
       for widget in self.widgets:
         f.write(widget.__str__())
 
-    pass
-
   @classmethod
   def fromFile(cls, filename):
     node = time2node()
@@ -383,7 +384,7 @@ class time2node:
 
 class time2graph:
   def __init__(self):
-    self.nodes = []
+    self.nodes: List[time2node] = []
     self.node_links = {} # {'NODE_ID':{'Link_type_1':[], 'Link_type_1':[]}}
     self.node_ID = {} #{'NODE_ID':node}
   
@@ -396,7 +397,8 @@ class time2graph:
     self.index(node)
   
   def save(self):
-
+    for node in self.nodes:
+      node.saveFile()
 
 if __name__=="__main__":
   x = {"auto":True,"values":["Hello", "Goodbye", "So long"]}
