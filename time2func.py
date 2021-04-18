@@ -1,8 +1,10 @@
 # Uses regex for various string matching
 from os import link
 import re
-import json
+import json, jsonpickle
 from typing import List, Set, Text, Union
+import datetime
+import random
 
 letters = set([x for x in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"])
 numberics = set([x for x in "0123456789."])
@@ -97,6 +99,19 @@ class Widget:
   
   def __repr__(self):
     return self.__class__.__name__ + " " + self.widget_text
+  
+  def __str__(self):
+    return self.widget_text
+  
+  def reset(self):
+    pass
+
+  def updateInternal(self):
+    pass
+
+  def updateExternal(self, parent_node):
+    pass
+
 
 class TextWidget(Widget):
   def __init__(self, widget_text):
@@ -178,8 +193,13 @@ class PropertyWidget(Widget):
   match_text = "^\s*#\+[a-zA-Z]*:"
   
   def parseString(self, widget_text: str):
-    command, input_data = widget_text.split(":", maxsplit=1)
-    self.name = command
+    try:
+      command, input_data = widget_text.split(":", maxsplit=1)
+    except:
+      command = widget_text.split(":", maxsplit=1)[0]
+      input_data = []
+
+    self.name = command[2:]
     output_data = ""
     if "=>" in input_data:
       input_data, output_data = input_data.split("=>", maxsplit=1)
@@ -193,6 +213,19 @@ class PropertyWidget(Widget):
       self.output_object = output_data.split()
     except:
       self.output_object = []
+    
+    self.widget_text = self.__repr__()
+  
+  def __repr__(self):
+    return "#+"+self.name+": "+str(self.input_object)+"=>"+str(self.output_object)+"\n"
+
+class DateModifiedPropertyWidget(PropertyWidget):
+  def parseString(self, widget_text: str):
+      super().parseString(widget_text)
+      self.name = "DATEMODIFIED"
+      if not self.output_object:
+        self.output_object = [str(datetime.datetime.now())]
+
 
 class HeadingWidget(Widget):
   @classmethod
@@ -261,6 +294,7 @@ class time2node:
     self.title = ""
     self.nicknames = []
     self.text = ""
+    self.node_ID = ""
   
   def update(self):
     self.text = [widget for widget in self.widgets if widget is TextWidget]
@@ -314,6 +348,14 @@ class time2node:
 
   #TODO implement save file
   def saveFile(self):
+    if not self.filename:
+      random.seed(datetime.datetime.now().timestamp())
+      self.node_ID = self.title+str(random.randint(0,10000000))
+    with open(self.filename, 'w') as f:
+      widget: Widget
+      for widget in self.widgets:
+        f.write(widget.__str__())
+
     pass
 
   @classmethod
@@ -321,6 +363,23 @@ class time2node:
     node = time2node()
     node.loadFile(filename)
     return node
+  
+  def addWidget(self, widget):
+    if not widget in self.widgets:
+      self.widgets.append(widget)
+  
+  def transposeWidgetUp(self, widget: Widget):
+    index = self.widgets.index(widget)
+    if index > 0:
+      self.widgets[index-1:index-1] = [widget]
+      del self.widgets[index+1]
+
+  
+  def transposeWidgetDown(self, widget: Widget):
+    index = self.widgets.index(widget)
+    if index != -1 and index < len(self.widgets):
+      self.widgets[index+1:index+1] = [widget]
+      del self.widgets[index]
 
 class time2graph:
   def __init__(self):
@@ -335,6 +394,9 @@ class time2graph:
   def add(self, node: time2node):
     self.nodes.append(node)
     self.index(node)
+  
+  def save(self):
+
 
 if __name__=="__main__":
   x = {"auto":True,"values":["Hello", "Goodbye", "So long"]}

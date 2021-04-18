@@ -8,9 +8,25 @@ from importlib import reload
 
 reload(t2)
 
-node = t2.time2node.fromFile("test.nd")
+node = t2.time2node.fromFile("simple_test.nd")
 node.update()
 #%%
+
+node.transposeWidgetUp(node.widgets[1])
+
+for i in node.widgets:
+  print(i.__repr__(), end='')
+
+node.transposeWidgetUp(node.widgets[2])
+
+print("---------------------------------------------------------------------------------------------------------")
+
+for i in node.widgets:
+  print(i.__repr__(), end='')
+
+node.addWidget(t2.DateModifiedPropertyWidget())
+
+
 for i in node.widgets:
   print(i.__repr__(), end='')
 

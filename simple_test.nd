@@ -1,0 +1,44 @@
+#+DESCRIPTION: Describes the .ND format
+// Comment 1
+Text
+* A Heading
+#tag1 #tag2 #tag3 
+#+TITLE: test_piece => true
+#+NICKNAMES: nickname_uno nickname_the_second => true false
+#+DATECREATED: => 2021/04/07-2054.30
+[[NODE_ID]]
+#+FUNCTION {"input": "JSON Input", "next_data": "Yes, this is valid input"} => {"output": "Result or computation from a function"}
+#+BEGIN_BACKLINKS 
+=> 
+{
+  "LINK_TYPE": ["NODE_ID_1", "NODE_ID_2"]
+}
+#+END_BACKLINKS
+#+CLOCKIN {"date_created": "2021/04/07-2051:10"}
+#+CLOCKOUT {"date_created": "2021/04/07-2052:12"}
+#+CLOCK {"recursive": true, "link_types": ["session"], "max_session_time":"15m"} => {"duration": "1m2s"}
+#+BEGIN_TODO {"description": "Write up my todo list", "date_created": "2021/04/07-2051:10", "repeat":null, "node_template":"NODE_ID"} 
+=> 
+{
+  "completed_flag": "true", 
+  "sessions": [
+    {"session":"NODE_ID", "date_completed":"2021/04/07-2351:10"}
+  ]
+}
+#+END_TODO
+#+BEGIN_TODOLIST {"recursive": "true", "link_types": ["child"]} =>
+{
+  //"todo_nodes": [["NODE_ID_1", "WIDGET_NUM_1", "todo description"], ["NODE_ID_1", "WIDGET_NUM_2", "todo description 2"]],
+  //"complete_nodes": [["NODE_ID_2", "WIDGET_NUM_3", "todo description 3"]],
+  //"todo_count": "2",
+  //"complete_count": "1",
+}
+- List item 1
+- [ ] list item 2 with a checkbox
+- [x] list item 3 with a marked checkbox
+1. List 2 item 1
+2. List 2 item 2
+  - Sub list
+
+#+DATEMODIFIED: => 2021/04/07-2051:10
+#+DATEMODIFIED: => 2021/04/07-2051:30
